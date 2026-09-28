@@ -45,17 +45,19 @@ select option{background:#0d1329;color:#fff}
 
 .btn{position:relative;width:100%;margin-top:20px;padding:15px;border:0;border-radius:14px;color:#fff;font:700 16px Inter,sans-serif;cursor:pointer;background:linear-gradient(135deg,var(--a1),#4f46e5 60%,#0891b2);box-shadow:0 8px 25px rgba(79,70,229,.4);transition:.2s}
 .btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.6;cursor:wait}
 .btn.sec{background:rgba(255,255,255,.08);box-shadow:none;border:1px solid var(--line);margin-top:12px}
 .hide{display:none!important}
 
 .drop{display:block;border:2px dashed rgba(129,140,248,.5);border-radius:16px;padding:28px 14px;text-align:center;cursor:pointer;background:rgba(99,102,241,.05);transition:.2s}
 .drop:hover{border-color:var(--a2);background:rgba(34,211,238,.08)}
 .drop .ic{font-size:38px}
+.drop small.err{color:#fca5a5;font-weight:600}
 
 .result{margin-top:20px;display:none;animation:rise .4s both}
 .loader{display:flex;align-items:center;gap:12px;padding:18px;border-radius:14px;background:rgba(0,0,0,.4);border:1px solid var(--line)}
 .spin{width:22px;height:22px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--a2);animation:s .8s linear infinite}
-.msg{padding:14px;border-radius:12px;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.4);color:#fecaca}
+.msg{padding:14px;border-radius:12px;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.4);color:#fecaca;white-space:pre-line}
 
 .card{background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0;cursor:pointer;transition:.2s}
 .card .q{font-weight:600;font-size:15px}
@@ -74,6 +76,17 @@ select option{background:#0d1329;color:#fff}
 
 .foot{text-align:center;color:var(--mut);font-size:13px;margin-top:30px}
 .foot b{color:#fff}
+
+/* ---------- PDF ke liye alag light theme (blank PDF fix) ---------- */
+.pdf-host{position:absolute;top:0;left:0;width:794px;background:#fff;z-index:-1}
+.pdf-mode{background:#fff;color:#111;padding:16px;width:794px;font-family:Inter,Arial,sans-serif;line-height:1.6}
+.pdf-mode div{color:#111!important}
+.pdf-mode .card,.pdf-mode .qcard{background:#f8fafc;border:1px solid #cbd5e1;page-break-inside:avoid;break-inside:avoid}
+.pdf-mode .card .a{display:block!important;color:#0b5c8a!important;border-top:1px dashed #94a3b8}
+.pdf-mode .opt,.pdf-mode .opt.wrong{background:#fff!important;border:1px solid #cbd5e1!important;color:#111!important;font-weight:400}
+.pdf-mode .opt[data-ok]{background:#d1fae5!important;border-color:#10b981!important;color:#047857!important;font-weight:700}
+.pdf-mode .why{display:block!important;background:#ecfeff;color:#155e75!important}
+.pdf-mode .res-footer{color:#4f46e5!important;border-top:1px solid #cbd5e1}
 </style>
 </head>
 <body>
@@ -113,10 +126,10 @@ select option{background:#0d1329;color:#fff}
     <label class="l">Subject aur Chapters Select Karein</label>
     <div id="subs_container"></div>
     <button class="btn" id="b_rm" onclick="genRoadmap()">🚀 Roadmap Banao</button>
-    
+
     <div id="r_rm" class="result">
       <div id="pdf_rm" class="print-area"></div>
-      <button class="btn sec" onclick="downloadPDF('pdf_rm', 'Roadmap')">⬇️ PDF Download Karo</button>
+      <button class="btn sec" onclick="downloadPDF('pdf_rm', 'Roadmap', this)">⬇️ PDF Download Karo</button>
     </div>
   </div>
 
@@ -126,7 +139,7 @@ select option{background:#0d1329;color:#fff}
       <input id="f_fc" type="file" accept="application/pdf" class="hide" onchange="onFileChange('fc')">
       <div class="ic">📄</div>
       <b>PDF Upload Karein</b>
-      <small id="nm_fc">Chapter ka PDF select karein</small>
+      <small id="nm_fc">Chapter ka PDF select karein (max 3MB)</small>
     </label>
     <div class="g2">
       <div>
@@ -152,7 +165,7 @@ select option{background:#0d1329;color:#fff}
 
     <div id="r_fc" class="result">
       <div id="pdf_fc" class="print-area"></div>
-      <button class="btn sec" onclick="downloadPDF('pdf_fc', 'Flashcards')">⬇️ PDF Download Karo</button>
+      <button class="btn sec" onclick="downloadPDF('pdf_fc', 'Flashcards', this)">⬇️ PDF Download Karo</button>
     </div>
   </div>
 
@@ -162,7 +175,7 @@ select option{background:#0d1329;color:#fff}
       <input id="f_qz" type="file" accept="application/pdf" class="hide" onchange="onFileChange('qz')">
       <div class="ic">📑</div>
       <b>Chapter PDF Upload Karein</b>
-      <small id="nm_qz">Quiz banane ke liye PDF select karein</small>
+      <small id="nm_qz">Quiz banane ke liye PDF select karein (max 3MB)</small>
     </label>
     <div class="g2">
       <div>
@@ -186,7 +199,7 @@ select option{background:#0d1329;color:#fff}
 
     <div id="r_qz" class="result">
       <div id="pdf_qz" class="print-area"></div>
-      <button class="btn sec" onclick="downloadPDF('pdf_qz', 'Quiz')">⬇️ PDF Download Karo</button>
+      <button class="btn sec" onclick="downloadPDF('pdf_qz', 'Quiz', this)">⬇️ PDF Download Karo</button>
     </div>
   </div>
 
@@ -202,7 +215,7 @@ select option{background:#0d1329;color:#fff}
 
     <div id="r_db" class="result">
       <div id="pdf_db" class="print-area"></div>
-      <button class="btn sec" onclick="downloadPDF('pdf_db', 'Doubt_Solution')">⬇️ PDF Download Karo</button>
+      <button class="btn sec" onclick="downloadPDF('pdf_db', 'Doubt_Solution', this)">⬇️ PDF Download Karo</button>
     </div>
   </div>
 
@@ -229,7 +242,7 @@ select option{background:#0d1329;color:#fff}
 
     <div id="r_sm" class="result">
       <div id="pdf_sm" class="print-area"></div>
-      <button class="btn sec" onclick="downloadPDF('pdf_sm', 'Detailed_Notes')">⬇️ PDF Download Karo</button>
+      <button class="btn sec" onclick="downloadPDF('pdf_sm', 'Detailed_Notes', this)">⬇️ PDF Download Karo</button>
     </div>
   </div>
 
@@ -237,6 +250,9 @@ select option{background:#0d1329;color:#fff}
 </div>
 
 <script>
+const MAX_MB = 3;
+const MAX_BYTES = MAX_MB * 1024 * 1024;
+
 let pdfBase64 = { fc: null, qz: null };
 let imgBase64Db = null;
 
@@ -253,11 +269,11 @@ function renderSubRows() {
   const cnt = parseInt(document.getElementById('n').value);
   const container = document.getElementById('subs_container');
   container.innerHTML = '';
-  
-  let chOptions = '';
-  for(let c=1; c<=20; c++) chOptions += `<option value="${c}">${c} Chapter${c>1?'s':''}</option>`;
 
-  for(let i=1; i<=cnt; i++) {
+  let chOptions = '';
+  for (let c = 1; c <= 20; c++) chOptions += `<option value="${c}">${c} Chapter${c > 1 ? 's' : ''}</option>`;
+
+  for (let i = 1; i <= cnt; i++) {
     let subOpts = subOptions.map(s => `<option value="${s}">${s}</option>`).join('');
     container.innerHTML += `
       <div class="sr">
@@ -269,22 +285,71 @@ function renderSubRows() {
 }
 renderSubRows();
 
+/* ---------- File handling (3MB check) ---------- */
+function setFileMsg(id, text, isErr) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.classList.toggle('err', !!isErr);
+}
+
+// Photo ko chhota (max 1600px, JPEG) kar deta hai, taaki upload hamesha limit ke andar rahe
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const max = 1600;
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.85).split(',')[1]);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('img')); };
+    img.src = url;
+  });
+}
+
 function onFileChange(k) {
+  const input = document.getElementById(k === 'db' ? 'img_db' : 'f_' + k);
+  const f = input.files[0];
+  if (!f) return;
+
   if (k === 'db') {
-    const f = document.getElementById('img_db').files[0];
-    if (!f) return;
-    document.getElementById('nm_db').innerText = f.name;
-    const r = new FileReader();
-    r.onload = e => imgBase64Db = e.target.result.split(',')[1];
-    r.readAsDataURL(f);
-  } else {
-    const f = document.getElementById('f_' + k).files[0];
-    if (!f) return;
-    document.getElementById('nm_' + k).innerText = f.name;
-    const r = new FileReader();
-    r.onload = e => pdfBase64[k] = e.target.result.split(',')[1];
-    r.readAsDataURL(f);
+    imgBase64Db = null;
+    setFileMsg('nm_db', '⏳ Photo process ho rahi hai...', false);
+    compressImage(f)
+      .then(b64 => {
+        if (b64.length > MAX_BYTES * 1.34) throw new Error('big');
+        imgBase64Db = b64;
+        setFileMsg('nm_db', '✅ ' + f.name, false);
+      })
+      .catch(() => {
+        input.value = '';
+        setFileMsg('nm_db', '❌ Photo read nahi ho payi. Doosri photo try karein.', true);
+      });
+    return;
   }
+
+  pdfBase64[k] = null;
+  if (f.size > MAX_BYTES) {
+    const mb = (f.size / 1024 / 1024).toFixed(1);
+    input.value = '';
+    setFileMsg('nm_' + k, `❌ PDF bahut badi hai (${mb}MB). Max ${MAX_MB}MB tak ki PDF upload karein.`, true);
+    alert(`PDF bahut badi hai (${mb}MB). Max ${MAX_MB}MB tak ki PDF upload karein.`);
+    return;
+  }
+
+  setFileMsg('nm_' + k, f.name, false);
+  const r = new FileReader();
+  r.onload = e => { pdfBase64[k] = e.target.result.split(',')[1]; };
+  r.onerror = () => setFileMsg('nm_' + k, '❌ File read nahi ho payi. Dobara try karein.', true);
+  r.readAsDataURL(f);
 }
 
 function showLoading(resId) {
@@ -294,13 +359,24 @@ function showLoading(resId) {
   target.innerHTML = `<div class="loader"><div class="spin"></div><span>AI Result Generate Kar Raha Hai, Kripya Wait Karein...</span></div>`;
 }
 
+/* ---------- Safe API call ---------- */
 async function callApi(payload) {
-  const res = await fetch('/api/study', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  return await res.json();
+  try {
+    const res = await fetch('/api/study', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    try {
+      return await res.json();
+    } catch {
+      if (res.status === 413) return { error: `File bahut badi hai. Max ${MAX_MB}MB tak ki file upload karein.` };
+      if (res.status === 504) return { error: 'Server ne time out kar diya. Chhoti PDF ke saath dobara try karein.' };
+      return { error: `Server error aaya (${res.status}). Dobara try karein.` };
+    }
+  } catch {
+    return { error: 'Internet ya network problem hai. Connection check karke dobara try karein.' };
+  }
 }
 
 function appendFooter(html) {
@@ -311,12 +387,12 @@ async function genRoadmap() {
   const name = document.getElementById('name').value;
   const days = document.getElementById('days').value;
   const hours = document.getElementById('hours').value;
-  if(!days || !hours) return alert('Din aur Ghante daalna zaroori hai');
+  if (!days || !hours) return alert('Din aur Ghante daalna zaroori hai');
 
   showLoading('r_rm');
   const cnt = parseInt(document.getElementById('n').value);
   const subjects = [];
-  for(let i=1; i<=cnt; i++) {
+  for (let i = 1; i <= cnt; i++) {
     subjects.push({
       name: document.getElementById(`sub_name_${i}`).value,
       chapters: document.getElementById(`sub_ch_${i}`).value
@@ -325,12 +401,12 @@ async function genRoadmap() {
 
   const data = await callApi({ mode: 'roadmap', name, days, hours, subjects });
   const container = document.getElementById('pdf_rm');
-  if(data.error) return container.innerHTML = `<div class="msg">${data.error}</div>`;
+  if (data.error) return container.innerHTML = `<div class="msg">${data.error}</div>`;
   container.innerHTML = appendFooter(`<div style="line-height:1.7">${data.text.replace(/\n/g, '<br>')}</div>`);
 }
 
 async function genFlashcards() {
-  if(!pdfBase64.fc) return alert('Pehle PDF upload karein');
+  if (!pdfBase64.fc) return alert('Pehle PDF upload karein');
   showLoading('r_fc');
   const data = await callApi({
     mode: 'flashcards',
@@ -339,7 +415,7 @@ async function genFlashcards() {
     lang: document.getElementById('lang_fc').value
   });
   const container = document.getElementById('pdf_fc');
-  if(data.error) return container.innerHTML = `<div class="msg">${data.error}</div>`;
+  if (data.error) return container.innerHTML = `<div class="msg">${data.error}</div>`;
 
   let html = data.cards.map(c => `
     <div class="card" onclick="this.classList.toggle('open')">
@@ -350,7 +426,7 @@ async function genFlashcards() {
 }
 
 async function genQuiz() {
-  if(!pdfBase64.qz) return alert('Pehle PDF upload karein');
+  if (!pdfBase64.qz) return alert('Pehle PDF upload karein');
   showLoading('r_qz');
   const data = await callApi({
     mode: 'quiz',
@@ -359,61 +435,4 @@ async function genQuiz() {
     lang: document.getElementById('lang_qz').value
   });
   const container = document.getElementById('pdf_qz');
-  if(data.error) return container.innerHTML = `<div class="msg">${data.error}</div>`;
-
-  let html = data.quiz.map((q, idx) => `
-    <div class="qcard" id="q_${idx}">
-      <div class="q">Q${idx+1}. ${q.q}</div>
-      ${q.o.map((opt, oIdx) => `<div class="opt" onclick="checkAns(${idx}, ${oIdx},${q.a})">${oIdx+1}.${opt}</div>`).join('')}
-      <div class="why" id="w_${idx}"><b>Sahi Jawab:</b> Option ${q.a + 1}<br>💡 ${q.why}</div>
-    </div>`).join('');
-  container.innerHTML = appendFooter(html);
-}
-
-function checkAns(qIdx, selectedOpt, correctOpt) {
-  const qCard = document.getElementById(`q_${qIdx}`);
-  if(qCard.dataset.done) return;
-  qCard.dataset.done = "true";
-  
-  const opts = qCard.querySelectorAll('.opt');
-  opts[selectedOpt].classList.add(selectedOpt === correctOpt ? 'correct' : 'wrong');
-  opts[correctOpt].classList.add('correct');
-  document.getElementById(`w_${qIdx}`).style.display = 'block';
-}
-
-async function genDoubt() {
-  if(!imgBase64Db) return alert('Pehle photo upload karein');
-  showLoading('r_db');
-  const data = await callApi({ mode: 'doubt', image: imgBase64Db });
-  const container = document.getElementById('pdf_db');
-  if(data.error) return container.innerHTML = `<div class="msg">${data.error}</div>`;
-  container.innerHTML = appendFooter(`<div style="line-height:1.7">${data.text.replace(/\n/g, '<br>')}</div>`);
-}
-
-async function genNotes() {
-  const subject = document.getElementById('sub_notes').value;
-  const topic = document.getElementById('topic_notes').value;
-  if(!topic.trim()) return alert('Topic ka naam likhein');
-
-  showLoading('r_sm');
-  const data = await callApi({ mode: 'notes', subject, topic });
-  const container = document.getElementById('pdf_sm');
-  if(data.error) return container.innerHTML = `<div class="msg">${data.error}</div>`;
-  container.innerHTML = appendFooter(`<div style="line-height:1.7">${data.text.replace(/\n/g, '<br>')}</div>`);
-}
-
-function downloadPDF(elementId, filename) {
-  const element = document.getElementById(elementId);
-  const opt = {
-    margin:       10,
-    filename:     `${filename}_Created_by_Ravi.pdf`,
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2, backgroundColor: '#070b19' },
-    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-  html2pdf().set(opt).from(element).save();
-}
-</script>
-</body>
-      </html>
-  
+  if (data.error) return container.innerHTML = `<div class="
