@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study Helper – Created by Ravi</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root{--bg:#070b19;--card:rgba(255,255,255,.07);--line:rgba(255,255,255,.15);--txt:#eef2ff;--mut:#98a2c3;--a1:#6366f1;--a2:#22d3ee;--ok:#10b981;--bad:#ef4444}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+
+.blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.blobs i{position:absolute;border-radius:50%;filter:blur(80px);opacity:.5;animation:float 14s ease-in-out infinite alternate}
+.blobs i:nth-child(1){width:340px;height:340px;background:#6366f1;top:-100px;left:-100px}
+.blobs i:nth-child(2){width:300px;height:300px;background:#22d3ee;top:40%;right:-100px;animation-delay:-4s}
+.blobs i:nth-child(3){width:320px;height:320px;background:#a855f7;bottom:-100px;left:20%;animation-delay:-8s}
+@keyframes float{to{transform:translate(50px,70px) scale(1.15)}}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+@keyframes s{to{transform:rotate(360deg)}}
+
+.wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:24px 16px 40px}
+.hero{text-align:center;padding:16px 0 12px;animation:rise .6s both}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:6px 14px;border-radius:99px;background:rgba(99,102,241,.2);color:#c7d2fe;border:1px solid rgba(99,102,241,.4)}
+h1{font-size:32px;line-height:1.2;margin:12px 0 8px;font-weight:800}
+h1 span{background:linear-gradient(90deg,var(--a1),var(--a2),#a855f7);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mut);font-size:15px;margin:0}
+
+.tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;background:var(--card);border:1px solid var(--line);padding:6px;border-radius:16px;margin:20px 0;backdrop-filter:blur(10px)}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:1;min-width:110px;border:0;background:transparent;color:var(--mut);padding:12px 14px;border-radius:12px;font:600 14px Inter,sans-serif;cursor:pointer;transition:.25s;white-space:nowrap}
+.tabs button.on{background:linear-gradient(135deg,var(--a1),#4f46e5);color:#fff;box-shadow:0 6px 20px rgba(99,102,241,.45);transform:translateY(-1px)}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;backdrop-filter:blur(12px);animation:pop .4s both;box-shadow:0 12px 32px rgba(0,0,0,.3)}
+label.l{display:block;font-size:13px;font-weight:600;color:#c7d2fe;margin:14px 0 6px}
+input,select,textarea{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--txt);font:500 15px Inter,sans-serif;outline:none;transition:.2s}
+input:focus,select:focus,textarea:focus{border-color:var(--a2);box-shadow:0 0 0 3px rgba(34,211,238,.2)}
+select option{background:#0d1329;color:#fff}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sr{display:grid;grid-template-columns:36px 1fr 120px;gap:10px;align-items:center;margin-bottom:10px}
+.num{width:36px;height:36px;border-radius:10px;background:rgba(99,102,241,.25);color:#c7d2fe;display:grid;place-items:center;font-weight:700}
+
+.btn{position:relative;width:100%;margin-top:20px;padding:15px;border:0;border-radius:14px;color:#fff;font:700 16px Inter,sans-serif;cursor:pointer;background:linear-gradient(135deg,var(--a1),#4f46e5 60%,#0891b2);box-shadow:0 8px 25px rgba(79,70,229,.4);transition:.2s}
+.btn:active{transform:scale(.98)}
+.btn.sec{background:rgba(255,255,255,.08);box-shadow:none;border:1px solid var(--line);margin-top:12px}
+.hide{display:none!important}
+
+.drop{display:block;border:2px dashed rgba(129,140,248,.5);border-radius:16px;padding:28px 14px;text-align:center;cursor:pointer;background:rgba(99,102,241,.05);transition:.2s}
+.drop:hover{border-color:var(--a2);background:rgba(34,211,238,.08)}
+.drop .ic{font-size:38px}
+
+.result{margin-top:20px;display:none;animation:rise .4s both}
+.loader{display:flex;align-items:center;gap:12px;padding:18px;border-radius:14px;background:rgba(0,0,0,.4);border:1px solid var(--line)}
+.spin{width:22px;height:22px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--a2);animation:s .8s linear infinite}
+.msg{padding:14px;border-radius:12px;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.4);color:#fecaca}
+
+.card{background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0;cursor:pointer;transition:.2s}
+.card .q{font-weight:600;font-size:15px}
+.card .a{display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);color:#7dd3fc;line-height:1.6}
+.card.open .a{display:block}
+
+.qcard{background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+.qcard .q{font-weight:600;font-size:16px;margin-bottom:12px}
+.opt{padding:12px 14px;border-radius:12px;border:1px solid var(--line);margin:8px 0;cursor:pointer;background:rgba(255,255,255,.03);transition:.2s}
+.opt.correct{background:rgba(16,185,129,.25)!important;border-color:var(--ok)!important;color:#6ee7b7;font-weight:700}
+.opt.wrong{background:rgba(239,68,68,.25)!important;border-color:var(--bad)!important;color:#fca5a5}
+.why{display:none;margin-top:10px;padding:12px;border-radius:10px;background:rgba(34,211,238,.1);color:#a5f3fc;font-size:14px}
+
+.print-area{padding:10px}
+.res-footer{text-align:center;margin-top:20px;padding-top:14px;border-top:1px solid var(--line);font-weight:700;color:var(--a2)}
+
+.foot{text-align:center;color:var(--mut);font-size:13px;margin-top:30px}
+.foot b{color:#fff}
+</style>
+</head>
+<body>
+<div class="blobs"><i></i><i></i><i></i></div>
+<div class="wrap">
+  <div class="hero">
+    <span class="badge">✨ AI Powered • Free</span>
+    <h1>Padhai ko banao <span>Smart</span></h1>
+    <p class="sub">Roadmap, flashcards, quiz, doubt solver aur detailed notes ek jagah.</p>
+  </div>
+
+  <div class="tabs">
+    <button id="t_rm" class="on" onclick="switchTab('rm')">🗓️ Roadmap</button>
+    <button id="t_fc" onclick="switchTab('fc')">🃏 Flashcards</button>
+    <button id="t_qz" onclick="switchTab('qz')">📝 Quiz</button>
+    <button id="t_db" onclick="switchTab('db')">🧠 Doubt</button>
+    <button id="t_sm" onclick="switchTab('sm')">📄 Notes</button>
+  </div>
+
+  <!-- ROADMAP -->
+  <div id="p_rm" class="panel">
+    <label class="l">Tumhara Naam</label>
+    <input id="name" placeholder="Jaise: Ravi">
+    <div class="g2">
+      <div><label class="l">Exam me kitne din bache?</label><input id="days" type="number" placeholder="Jaise: 60"></div>
+      <div><label class="l">Roz kitne ghante padhenge?</label><input id="hours" type="number" placeholder="Jaise: 4"></div>
+    </div>
+    <label class="l">Kitne Subjects Hain?</label>
+    <select id="n" onchange="renderSubRows()">
+      <option value="1">1 Subject</option>
+      <option value="2">2 Subjects</option>
+      <option value="3" selected>3 Subjects</option>
+      <option value="4">4 Subjects</option>
+      <option value="5">5 Subjects</option>
+      <option value="6">6 Subjects</option>
+    </select>
+    <label class="l">Subject aur Chapters Select Karein</label>
+    <div id="subs_container"></div>
+    <button class="btn" id="b_rm" onclick="genRoadmap()">🚀 Roadmap Banao</button>
+    
+    <div id="r_rm" class="result">
+      <div id="pdf_rm" class="print-area"></div>
+      <button class="btn sec" onclick="downloadPDF('pdf_rm', 'Roadmap')">⬇️ PDF Download Karo</button>
+    </div>
+  </div>
+
+  <!-- FLASHCARDS -->
+  <div id="p_fc" class="panel hide">
+    <label class="drop">
+      <input id="f_fc" type="file" accept="application/pdf" class="hide" onchange="onFileChange('fc')">
+      <div class="ic">📄</div>
+      <b>PDF Upload Karein</b>
+      <small id="nm_fc">Chapter ka PDF select karein</small>
+    </label>
+    <div class="g2">
+      <div>
+        <label class="l">Kitne Flashcards?</label>
+        <select id="cnt_fc">
+          <option value="15">15 cards</option>
+          <option value="20">20 cards</option>
+          <option value="30">30 cards</option>
+          <option value="50">50 cards</option>
+          <option value="60">60 cards</option>
+        </select>
+      </div>
+      <div>
+        <label class="l">Bhasha</label>
+        <select id="lang_fc">
+          <option value="Hinglish">Hinglish</option>
+          <option value="Hindi">Hindi</option>
+          <option value="English">English</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn" onclick="genFlashcards()">⚡ Flashcards Banao</button>
+
+    <div id="r_fc" class="result">
+      <div id="pdf_fc" class="print-area"></div>
+      <button class="btn sec" onclick="downloadPDF('pdf_fc', 'Flashcards')">⬇️ PDF Download Karo</button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="p_qz" class="panel hide">
+    <label class="drop">
+      <input id="f_qz" type="file" accept="application/pdf" class="hide" onchange="onFileChange('qz')">
+      <div class="ic">📑</div>
+      <b>Chapter PDF Upload Karein</b>
+      <small id="nm_qz">Quiz banane ke liye PDF select karein</small>
+    </label>
+    <div class="g2">
+      <div>
+        <label class="l">Kitne Sawal?</label>
+        <select id="cnt_qz">
+          <option value="10">10 Sawal</option>
+          <option value="15">15 Sawal</option>
+          <option value="20">20 Sawal</option>
+        </select>
+      </div>
+      <div>
+        <label class="l">Bhasha</label>
+        <select id="lang_qz">
+          <option value="Hinglish">Hinglish</option>
+          <option value="Hindi">Hindi</option>
+          <option value="English">English</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn" onclick="genQuiz()">📝 Quiz Banao</button>
+
+    <div id="r_qz" class="result">
+      <div id="pdf_qz" class="print-area"></div>
+      <button class="btn sec" onclick="downloadPDF('pdf_qz', 'Quiz')">⬇️ PDF Download Karo</button>
+    </div>
+  </div>
+
+  <!-- DOUBT SOLVER -->
+  <div id="p_db" class="panel hide">
+    <label class="drop">
+      <input id="img_db" type="file" accept="image/*" class="hide" onchange="onFileChange('db')">
+      <div class="ic">📷</div>
+      <b>Question Ki Photo Upload Karein</b>
+      <small id="nm_db">Saaf photo upload karein</small>
+    </label>
+    <button class="btn" onclick="genDoubt()">🧠 Answer Generate Karo</button>
+
+    <div id="r_db" class="result">
+      <div id="pdf_db" class="print-area"></div>
+      <button class="btn sec" onclick="downloadPDF('pdf_db', 'Doubt_Solution')">⬇️ PDF Download Karo</button>
+    </div>
+  </div>
+
+  <!-- NOTES -->
+  <div id="p_sm" class="panel hide">
+    <label class="l">Subject Chunein</label>
+    <select id="sub_notes">
+      <option value="Physics">Physics</option>
+      <option value="Chemistry">Chemistry</option>
+      <option value="Maths">Maths</option>
+      <option value="Biology">Biology</option>
+      <option value="Science">Science</option>
+      <option value="Hindi">Hindi</option>
+      <option value="English">English</option>
+      <option value="History">History</option>
+      <option value="Political Science">Political Science</option>
+      <option value="Geography">Geography</option>
+      <option value="Economics">Economics</option>
+    </select>
+    <label class="l">Topic Ka Naam Likhein</label>
+    <input id="topic_notes" placeholder="Jaise: Newton's Laws of Motion ya Trigonometry">
+
+    <button class="btn" onclick="genNotes()">📄 Detailed Notes Banao</button>
+
+    <div id="r_sm" class="result">
+      <div id="pdf_sm" class="print-area"></div>
+      <button class="btn sec" onclick="downloadPDF('pdf_sm', 'Detailed_Notes')">⬇️ PDF Download Karo</button>
+    </div>
+  </div>
+
+  <div class="foot">Created with ❤️ by <b>Ravi</b></div>
+</div>
+
+<script>
+let pdfBase64 = { fc: null, qz: null };
+let imgBase64Db = null;
+
+const subOptions = ["Maths", "Science", "Chemistry", "Physics", "Hindi", "English", "History", "Political Science", "Geography", "Economics"];
+
+function switchTab(t) {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.add('hide'));
+  document.getElementById('t_' + t).classList.add('on');
+  document.getElementById('p_' + t).classList.remove('hide');
+}
+
+function renderSubRows() {
+  const cnt = parseInt(document.getElementById('n').value);
+  const container = document.getElementById('subs_container');
+  container.innerHTML = '';
+  
+  let chOptions = '';
+  for(let c=1; c<=20; c++) chOptions += `<option value="${c}">${c} Chapter${c>1?'s':''}</option>`;
+
+  for(let i=1; i<=cnt; i++) {
+    let subOpts = subOptions.map(s => `<option value="${s}">${s}</option>`).join('');
+    container.innerHTML += `
+      <div class="sr">
+        <div class="num">${i}</div>
+        <select id="sub_name_${i}">${subOpts}</select>
+        <select id="sub_ch_${i}">${chOptions}</select>
+      </div>`;
+  }
+}
+renderSubRows();
+
+function onFileChange(k) {
+  if (k === 'db') {
+    const f = document.getElementById('img_db').files[0];
+    if (!f) return;
+    document.getElementById('nm_db').innerText = f.name;
+    const r = new FileReader();
+    r.onload = e => imgBase64Db = e.target.result.split(',')[1];
+    r.readAsDataURL(f);
+  } else {
+    const f = document.getElementById('f_' + k).files[0];
+    if (!f) return;
+    document.getElementById('nm_' + k).innerText = f.name;
+    const r = new FileReader();
+    r.onload = e => pdfBase64[k] = e.target.result.split(',')[1];
+    r.readAsDataURL(f);
+  }
+}
+
+function showLoading(resId) {
+  const parent = document.getElementById(resId);
+  parent.style.display = 'block';
+  const target = parent.querySelector('.print-area');
+  target.innerHTML = `<div class="loader"><div class="spin"></div><span>AI Result Generate Kar Raha Hai, Kripya Wait Karein...</span></div>`;
+}
+
+async function callApi(payload) {
+  const res = await fetch('/api/study', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  return await res.json();
+}
+
+function appendFooter(html) {
+  return html + `<div class="res-footer">Created by Ravi</div>`;
+}
+
+async function genRoadmap() {
+  const name = document.getElementById('name').value;
+  const days = document.getElementById('days').value;
+  const hours = document.getElementById('hours').value;
+  if(!days || !hours) return alert('Din aur Ghante daalna zaroori hai');
+
+  showLoading('r_rm');
+  const cnt = parseInt(document.getElementById('n').value);
+  const subjects = [];
+  for(let i=1; i<=cnt; i++) {
+    subjects.push({
+      name: document.getElementById(`sub_name_${i}`).value,
+      chapters: document.getElementById(`sub_ch_${i}`).value
+    });
+  }
+
+  const data = await callApi({ mode: 'roadmap', name, days, hours, subjects });
+  const container = document.getElementById('pdf_rm');
+  if(data.error) return container.innerHTML = `<div class="msg">${data.error}</div>`;
+  container.innerHTML = appendFooter(`<div style="line-height:1.7">${data.text.replace(/\n/g, '<br>')}</div>`);
+}
+
+async function genFlashcards() {
+  if(!pdfBase64.fc) return alert('Pehle PDF upload karein');
+  showLoading('r_fc');
+  const data = await callApi({
+    mode: 'flashcards',
+    pdf: pdfBase64.fc,
+    count: document.getElementById('cnt_fc').value,
+    lang: document.getElementById('lang_fc').value
+  });
+  const container = document.getElementById('pdf_fc');
+  if(data.error) return container.innerHTML = `<div class="msg">${data.error}</div>`;
+
+  let html = data.cards.map(c => `
+    <div class="card" onclick="this.classList.toggle('open')">
+      <div class="q">❓ ${c.q}</div>
+      <div class="a">💡 ${c.a}</div>
+    </div>`).join('');
+  container.innerHTML = appendFooter(html);
+}
+
+async function genQuiz() {
+  if(!pdfBase64.qz) return alert('Pehle PDF upload karein');
+  showLoading('r_qz');
+  const data = await callApi({
+    mode: 'quiz',
+    pdf: pdfBase64.qz,
+    count: document.getElementById('cnt_qz').value,
+    lang: document.getElementById('lang_qz').value
+  });
+  const container = document.getElementById('pdf_qz');
+  if(data.error) return container.innerHTML = `<div class="msg">${data.error}</div>`;
+
+  let html = data.quiz.map((q, idx) => `
+    <div class="qcard" id="q_${idx}">
+      <div class="q">Q${idx+1}. ${q.q}</div>
+      ${q.o.map((opt, oIdx) => `<div class="opt" onclick="checkAns(${idx}, ${oIdx},${q.a})">${oIdx+1}.${opt}</div>`).join('')}
+      <div class="why" id="w_${idx}"><b>Sahi Jawab:</b> Option ${q.a + 1}<br>💡 ${q.why}</div>
+    </div>`).join('');
+  container.innerHTML = appendFooter(html);
+}
+
+function checkAns(qIdx, selectedOpt, correctOpt) {
+  const qCard = document.getElementById(`q_${qIdx}`);
+  if(qCard.dataset.done) return;
+  qCard.dataset.done = "true";
+  
+  const opts = qCard.querySelectorAll('.opt');
+  opts[selectedOpt].classList.add(selectedOpt === correctOpt ? 'correct' : 'wrong');
+  opts[correctOpt].classList.add('correct');
+  document.getElementById(`w_${qIdx}`).style.display = 'block';
+}
+
+async function genDoubt() {
+  if(!imgBase64Db) return alert('Pehle photo upload karein');
+  showLoading('r_db');
+  const data = await callApi({ mode: 'doubt', image: imgBase64Db });
+  const container = document.getElementById('pdf_db');
+  if(data.error) return container.innerHTML = `<div class="msg">${data.error}</div>`;
+  container.innerHTML = appendFooter(`<div style="line-height:1.7">${data.text.replace(/\n/g, '<br>')}</div>`);
+}
+
+async function genNotes() {
+  const subject = document.getElementById('sub_notes').value;
+  const topic = document.getElementById('topic_notes').value;
+  if(!topic.trim()) return alert('Topic ka naam likhein');
+
+  showLoading('r_sm');
+  const data = await callApi({ mode: 'notes', subject, topic });
+  const container = document.getElementById('pdf_sm');
+  if(data.error) return container.innerHTML = `<div class="msg">${data.error}</div>`;
+  container.innerHTML = appendFooter(`<div style="line-height:1.7">${data.text.replace(/\n/g, '<br>')}</div>`);
+}
+
+function downloadPDF(elementId, filename) {
+  const element = document.getElementById(elementId);
+  const opt = {
+    margin:       10,
+    filename:     `${filename}_Created_by_Ravi.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, backgroundColor: '#070b19' },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  html2pdf().set(opt).from(element).save();
+}
+</script>
+</body>
+      </html>
+  
