@@ -1,36 +1,64 @@
 export const config = { maxDuration: 60 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+// Multiple fallbacks for stable execution
+const MODELS = [
+  'gemini-2.5-flash',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-flash'
+];
 
 async function gemini(parts, json) {
   let lastError = 'AI Response Error';
-  for (let attempt = 0; attempt < 4; attempt++) {
-    try {
-      const body = { contents: [{ parts }] };
-      if (json) body.generationConfig = { responseMimeType: 'application/json' };
-      const r = await fetch(`${URL}?key=${process.env.GEMINI_API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      const data = await r.json();
-      const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('');
-      if (text) return { text };
-      lastError = data?.error?.message || lastError;
-      if (![429, 500, 503].includes(r.status)) break;
-    } catch (e) {
-      lastError = 'Server Timeout';
+
+  for (const model of MODELS) {
+    const URL = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const body = { contents: [{ parts }] };
+        if (json) {
+          body.generationConfig = { responseMimeType: 'application/json' };
+        }
+
+        const r = await fetch(`${URL}?key=${process.env.GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await r.json();
+
+        if (r.ok && data?.candidates?.[0]?.content?.parts) {
+          const text = data.candidates[0].content.parts.map(p => p.text).join('');
+          if (text) return { text };
+        }
+
+        lastError = data?.error?.message || `Status ${r.status}`;
+        if (![429, 500, 503].includes(r.status)) break;
+      } catch (e) {
+        lastError = e.message || 'Server Fetch Error';
+      }
+      await sleep(1500);
     }
-    await sleep(2000 * (attempt + 1));
   }
-  return { error: 'AI Busy Hai! Dobara Try Karein.\n(' + lastError + ')' };
+
+  return { error: 'AI Error: ' + lastError + '\n\nKripya check karein ki GEMINI_API_KEY sahi se Vercel Environment Variables me set hai.' };
 }
 
-const parseJSON = (t) => JSON.parse(t.replace(/```json|```/g, '').trim());
+const parseJSON = (t) => {
+  const clean = t.replace(/```json|```/g, '').trim();
+  return JSON.parse(clean);
+};
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Only POST' });
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Only POST allowed' });
+  
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(500).json({ error: 'GEMINI_API_KEY missing! Vercel me Environment Variable add karein.' });
+  }
+
   const b = req.body || {};
   const bad = (msg) => res.status(400).json({ error: msg });
 
@@ -47,7 +75,8 @@ Hinglish me ek practical schedule roadmap banao:
 1. Daily time division for each subject.
 2. Din-wise ya week-wise target plan.
 3. Revision tips & mock test advice.
-Markdown tables mat use karo.`;
+Markdown tables mat use karo. Clear headings aur bullet points use karo.`;
+
     const out = await gemini([{ text: prompt }], false);
     return res.status(200).json(out);
   }
@@ -58,8 +87,11 @@ Markdown tables mat use karo.`;
     const pdfPart = { inline_data: { mime_type: 'application/pdf', data: b.pdf } };
     const prompt = `PDF se ${b.count || 15} flashcards banao. Bhasha: ${b.lang || 'Hinglish'}.
 Important definitions, formulas, and facts extract karo.
-Strictly return JSON array only: [{"q":"Question text","a":"Answer text"}]`;
+Strictly return JSON array only without markdown or extra text: [{"q":"Question text","a":"Answer text"}]`;
+
     const out = await gemini([{ text: prompt }, pdfPart], true);
+    if (out.error) return res.status(500).json(out);
+    
     try {
       const cards = parseJSON(out.text);
       return res.status(200).json({ cards });
@@ -75,10 +107,13 @@ Strictly return JSON array only: [{"q":"Question text","a":"Answer text"}]`;
     const prompt = `PDF se ${b.count || 10} Multiple Choice Questions (MCQs) banao. Bhasha: ${b.lang || 'Hinglish'}.
 Rules:
 - 4 options ho, sirf 1 sahi.
-- 3 galat options PDF ke context se related hone chahiye taaki trick ho.
+- 3 galat options PDF ke context se related hone chahiye.
 - "a" is correct option index (0, 1, 2, or 3).
-Strictly return JSON array: [{"q":"Question","o":["Opt1","Opt2","Opt3","Opt4"],"a":0,"why":"Short Explanation"}]`;
+Strictly return JSON array without extra text: [{"q":"Question","o":["Opt1","Opt2","Opt3","Opt4"],"a":0,"why":"Short Explanation"}]`;
+
     const out = await gemini([{ text: prompt }, pdfPart], true);
+    if (out.error) return res.status(500).json(out);
+
     try {
       const quiz = parseJSON(out.text);
       return res.status(200).json({ quiz });
@@ -98,6 +133,7 @@ Strictly return JSON array: [{"q":"Question","o":["Opt1","Opt2","Opt3","Opt4"],"
 (Clear step by step explanation)
 ## Final Answer
 (Final answer text)`;
+
     const out = await gemini([{ text: prompt }, imgPart], false);
     return res.status(200).json(out);
   }
@@ -105,15 +141,16 @@ Strictly return JSON array: [{"q":"Question","o":["Opt1","Opt2","Opt3","Opt4"],"
   /* ---------- DETAILED NOTES ---------- */
   if (b.mode === 'notes') {
     const prompt = `Subject: ${b.subject}, Topic: ${b.topic}.
-Is topic par Bihar Board / CBSE exam orientation ke hisab se fully detailed study notes banao:
+Is topic par fully detailed study notes banao:
 1. Definition & Core Concept
-2. Important Formulas / Diagrams / Reaction / Dates
-3. Key Bullet Points
-4. 3 Important Exam Questions with answers.
+2. Important Formulas / Key Points / Diagrams (Text description)
+3. 3 Important Exam Questions with answers.
 Simple Hindi/Hinglish language use karo. Headings and bullet points use karo.`;
+
     const out = await gemini([{ text: prompt }], false);
     return res.status(200).json(out);
   }
 
   return bad('Invalid request');
-                               }
+  }
+      
