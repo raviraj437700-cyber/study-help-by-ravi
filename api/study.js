@@ -2,11 +2,11 @@ export const config = { maxDuration: 60 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Multiple fallbacks for stable execution
+// Official updated models list
 const MODELS = [
   'gemini-2.5-flash',
-  'gemini-1.5-flash-latest',
-  'gemini-1.5-flash'
+  'gemini-2.0-flash',
+  'gemini-flash'
 ];
 
 async function gemini(parts, json) {
@@ -40,11 +40,11 @@ async function gemini(parts, json) {
       } catch (e) {
         lastError = e.message || 'Server Fetch Error';
       }
-      await sleep(1500);
+      await sleep(1200);
     }
   }
 
-  return { error: 'AI Error: ' + lastError + '\n\nKripya check karein ki GEMINI_API_KEY sahi se Vercel Environment Variables me set hai.' };
+  return { error: 'AI Error: ' + lastError + '\n\nKripya GEMINI_API_KEY check karein ki sahi se set hai ya nahi.' };
 }
 
 const parseJSON = (t) => {
@@ -87,7 +87,7 @@ Markdown tables mat use karo. Clear headings aur bullet points use karo.`;
     const pdfPart = { inline_data: { mime_type: 'application/pdf', data: b.pdf } };
     const prompt = `PDF se ${b.count || 15} flashcards banao. Bhasha: ${b.lang || 'Hinglish'}.
 Important definitions, formulas, and facts extract karo.
-Strictly return JSON array only without markdown or extra text: [{"q":"Question text","a":"Answer text"}]`;
+Strictly return JSON array only without markdown: [{"q":"Question text","a":"Answer text"}]`;
 
     const out = await gemini([{ text: prompt }, pdfPart], true);
     if (out.error) return res.status(500).json(out);
@@ -109,7 +109,7 @@ Rules:
 - 4 options ho, sirf 1 sahi.
 - 3 galat options PDF ke context se related hone chahiye.
 - "a" is correct option index (0, 1, 2, or 3).
-Strictly return JSON array without extra text: [{"q":"Question","o":["Opt1","Opt2","Opt3","Opt4"],"a":0,"why":"Short Explanation"}]`;
+Strictly return JSON array: [{"q":"Question","o":["Opt1","Opt2","Opt3","Opt4"],"a":0,"why":"Short Explanation"}]`;
 
     const out = await gemini([{ text: prompt }, pdfPart], true);
     if (out.error) return res.status(500).json(out);
@@ -143,7 +143,7 @@ Strictly return JSON array without extra text: [{"q":"Question","o":["Opt1","Opt
     const prompt = `Subject: ${b.subject}, Topic: ${b.topic}.
 Is topic par fully detailed study notes banao:
 1. Definition & Core Concept
-2. Important Formulas / Key Points / Diagrams (Text description)
+2. Important Formulas / Key Points
 3. 3 Important Exam Questions with answers.
 Simple Hindi/Hinglish language use karo. Headings and bullet points use karo.`;
 
@@ -152,5 +152,4 @@ Simple Hindi/Hinglish language use karo. Headings and bullet points use karo.`;
   }
 
   return bad('Invalid request');
-  }
-      
+}
