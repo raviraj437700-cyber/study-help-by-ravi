@@ -6,8 +6,12 @@ export const config = {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Sirf 2 models, taaki 60s timeout se pehle fallback ho jaye
-const MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+// Sirf 2 models, taaki 60s timeout se pehle fallback ho jaye.
+// Vercel me GEMINI_MODELS="model1,model2" set karke bina code badle model change kar sakte ho.
+const MODELS = (process.env.GEMINI_MODELS || 'gemini-3.5-flash,gemini-3.5-flash-lite')
+  .split(',')
+  .map((m) => m.trim())
+  .filter(Boolean);
 
 const TOTAL_BUDGET_MS = 55000; // maxDuration se thoda kam
 const MAX_B64_CHARS = 4.3 * 1024 * 1024; // Vercel 4.5MB limit ke andar
